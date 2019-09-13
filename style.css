@@ -12,7 +12,46 @@ body {
     align-items: center;
 
     color: #878787;
+    background: #101010;
+}
 
+.container {
     background: #151515;
+    border: #0e0e0e;
+}
+
+.head {
+    padding-bottom: 30px;
+}
+
+.stat {
+
+}
+
+.buttons {
+    margin-bottom: 10px;
+    /* fix */
+    padding-left: 1px;
+}
+.btn {
+    background: #101010;
+    color: #bababa;
+}
+
+.day{
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.graph {
+    
+}
+
+.dayMinTemperature {
+    color: #bababa;
+}
+
+.dayMaxTemperature, .dayMinTemperature {
+    display: inline;
 }
 
