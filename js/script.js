@@ -3,12 +3,14 @@
 window.addEventListener('load', ()=> {
     let long,lat;
 
+    //fix
+    let TemperatureBtn = document.querySelector('.TemperatureBtn');
+    let PrecipitationBtn = document.querySelector('.PrecipitationBtn');
+    let WindBtn = document.querySelector('.WindBtn');
 
-    let temperatureSection = document.querySelector('.temperature-section');
-    const temperatureSpan = document.querySelector('.temperature-section span');
 
-
-    let metricTriger = false;
+    let temperatureCelsius = document.querySelector('.celsiusTemperature');
+    let temperatureFahrenheit = document.querySelector('.fahrenheitTemperature');
 
 
     let currentlyStats = {
@@ -18,12 +20,17 @@ window.addEventListener('load', ()=> {
         currentlyTimeZone : document.querySelector(".location-timezone"),
 
         humidity : document.querySelector(".humidity"),
-        wind : document.querySelector(".wind")
+        wind : document.querySelector(".wind"),
+        pressure : document.querySelector(".pressure")
     }
 
     let hourlyStats = {
         hourlyTime : new Array(),
-        hourlyTemperature : new Array()
+        hourlyTemperature : new Array(),
+        hourlyWind : new Array(),
+
+        //fix
+        hourlyRressure : new Array()
     }
 
     let dailyStats = {
@@ -51,43 +58,57 @@ window.addEventListener('load', ()=> {
                     setHourly(Data, "celsius");   
                     setDaily(Data, "celsius");
                     
-                    setChart();
+                    setChart("temperature");
+                    
 
-                    temperatureSection.addEventListener("click", () => {
-                        changeMetric(Data);
+                    TemperatureBtn.addEventListener("click", () => {
+                        setChart("temperature");
+                    });
+                    PrecipitationBtn.addEventListener("click", () => {
+                        setChart("precipitation");
+                    });
+                    WindBtn.addEventListener("click", () => {
+                        setChart("wind");
+                    });
+
+                    
+                    temperatureCelsius.addEventListener("click", () => {
+                        changeToCelsius(Data);
+                    });
+                    temperatureFahrenheit.addEventListener("click", () => {
+                        changeToFahrenheit(Data);
                     });
                 })
         });
     }
 
-    function changeMetric(Data) {
-        if(metricTriger) {
-            metricTriger = false;
-
-            temperatureSpan.textContent = " °C";
+    function changeToCelsius(Data) {
+        var style = document.createElement('style');
+        document.head.appendChild(style);
+        style.sheet.insertRule('#celsius {color: #bababa}');
+        style.sheet.insertRule('#fahrenheit {color: #878787}');
             
-            setCurrently(Data, "celsius");
-            setHourly(Data, "celsius");   
-            setDaily(Data, "celsius");
+        setCurrently(Data, "celsius");
+        setHourly(Data, "celsius");   
+        setDaily(Data, "celsius");
                     
-            setChart();
-        }
-        else {
-            metricTriger = true;
+        setChart("temperature");
+    }
+    function changeToFahrenheit(Data) {
+        var style = document.createElement('style');
+        document.head.appendChild(style);
+        style.sheet.insertRule('#celsius {color: #878787}');
+        style.sheet.insertRule('#fahrenheit {color: #bababa');
 
-            temperatureSpan.textContent = " °F";
-
-            setCurrently(Data, "fahrenheit");
-            setHourly(Data, "fahrenheit");   
-            setDaily(Data, "fahrenheit");
+        setCurrently(Data, "fahrenheit");
+        setHourly(Data, "fahrenheit");   
+        setDaily(Data, "fahrenheit");
                     
-            setChart();
-        }
-        
+        setChart("temperature");
     }
 
     function setCurrently(Data,metric) {
-        const {temperature, summary , icon, humidity, windSpeed, time} = Data.currently;
+        const {temperature, summary , icon, humidity, windSpeed, time, pressure} = Data.currently;
         if(metric == "celsius") {
             currentlyStats.currentlyTemperature.textContent = Math.floor((temperature-32) * (5/9));
             currentlyStats.wind.textContent ="Wind: " + Math.floor(windSpeed/3.6) + " km/h";
@@ -98,8 +119,10 @@ window.addEventListener('load', ()=> {
         }
         currentlyStats.currentlySummary.textContent = summary;
         currentlyStats.currentlyTimeZone.textContent = Data.timezone;
-        currentlyStats.humidity.textContent ="Humidity: " + Math.floor(humidity*100) + " %";
         currentlyStats.currentlyTime.textContent = setTime(time,"date");
+
+        currentlyStats.humidity.textContent ="Humidity: " + Math.floor(humidity*100) + " %";
+        currentlyStats.pressure.textContent = "Pressure: " + Math.floor(pressure) + " hpa";
         
         setIcons(icon, document.querySelector(".icon"));
     }
@@ -107,11 +130,22 @@ window.addEventListener('load', ()=> {
     function setHourly(Data,metric) {
         const {data} = Data.hourly;
                     
+        //reset data
         hourlyStats.hourlyTime = [];
         hourlyStats.hourlyTemperature = [];
+        hourlyStats.hourlyWind = [];
+
+        //fix
+        hourlyStats.hourlyRressure = [];
+
 
         data.forEach(function(element) {
             hourlyStats.hourlyTime.push(setTime(element.time,"woDate"));
+            hourlyStats.hourlyWind.push(element.windSpeed);
+            
+            //fix
+            hourlyStats.hourlyRressure.push(element.pressure);
+
             if(metric == "celsius") {
                 hourlyStats.hourlyTemperature.push(Math.floor((element.temperature-32)*(5/9)));
             }
@@ -145,10 +179,10 @@ window.addEventListener('load', ()=> {
             dayName[i-1].innerText=dailyStats.dailyTime[i-1];
 
             dayMaxTemperature = document.getElementsByClassName("dayMaxTemperature");
-            dayMaxTemperature[i-1].innerText=dailyStats.dailyTemperatureHigh[i-1] + " °";
+            dayMaxTemperature[i-1].innerText=dailyStats.dailyTemperatureHigh[i-1] + "°";
             
             dayMinTemperature = document.getElementsByClassName("dayMinTemperature");
-            dayMinTemperature[i-1].innerText=dailyStats.dailyTemperatureLow[i-1] + " °";
+            dayMinTemperature[i-1].innerText=dailyStats.dailyTemperatureLow[i-1] + "°";
             
 
             setIcons(dailyStats.dailySummary[i-1], document.querySelector(".dayIcon"+i));
@@ -173,9 +207,21 @@ window.addEventListener('load', ()=> {
     }
 
 
-
-    function setChart() {
+    function setChart(dataValue) {
         var ctx = document.getElementById('myChart').getContext('2d');
+
+        let tempVal = Array();
+
+        if(dataValue == "temperature") {
+            tempVal = hourlyStats.hourlyTemperature.slice(0, 7);
+        }
+        else if(dataValue == "precipitation") {
+            tempVal = hourlyStats.hourlyRressure.slice(0, 7);
+        }
+        else if(dataValue == "wind") {
+            tempVal = hourlyStats.hourlyWind.slice(0, 7);
+        }
+
         var chart = new Chart(ctx, {
 
             type: 'line',
@@ -185,7 +231,7 @@ window.addEventListener('load', ()=> {
                 datasets: [{
                     backgroundColor: '#1c1c1c',
                     borderColor: '#373737',
-                    data: hourlyStats.hourlyTemperature.slice(0, 7),
+                    data: tempVal,
                 }]
             },
 

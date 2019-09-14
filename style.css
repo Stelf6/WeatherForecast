@@ -5,11 +5,10 @@
 }
 
 body {
-    height: 100vh;
-    display: flex;
+    /* display: flex;
     justify-content: center;
     flex-direction: column;
-    align-items: center;
+    align-items: center; */
 
     color: #878787;
     background: #101010;
@@ -31,7 +30,7 @@ body {
 .buttons {
     margin-bottom: 10px;
     /* fix */
-    padding-left: 1px;
+    padding-left: 15px;
 }
 .btn {
     background: #101010;
